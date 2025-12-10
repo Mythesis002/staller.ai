@@ -281,6 +281,12 @@ def _validate_cloud_url(u: str) -> None:
 
     raise HTTPException(status_code=400, detail="URL host not allowed")
 
+
+def _sse_format(data: Dict[str, Any]) -> str:
+    """Format a dict as an SSE data line."""
+    import json as _json
+    return f"data: {_json.dumps(data)}\n\n"
+
 # ============================================================================
 # API ENDPOINTS
 # ============================================================================
@@ -415,7 +421,7 @@ async def analyze_remote(req: AnalyzeRemoteRequest) -> Dict[str, Any]:
             )
             ANALYSIS_CACHE[key] = res_dict
 
-            # PERSIST TO DISK to avoid re-analysis later
+            # Persist to agent memory
             try:
                 from video_editing_agent import MediaAnalysis
                 import datetime
@@ -423,7 +429,7 @@ async def analyze_remote(req: AnalyzeRemoteRequest) -> Dict[str, Any]:
                 filename = req.filename or Path(req.url).name
 
                 media_analysis = MediaAnalysis(
-                    file_path=req.url,  # Use cloud URL as file_path
+                    file_path=req.url,
                     file_type=res_dict.get("file_type", "unknown"),
                     filename=filename,
                     analysis=res_dict.get("analysis", ""),
@@ -453,8 +459,166 @@ async def analyze_remote(req: AnalyzeRemoteRequest) -> Dict[str, Any]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# (You can add more endpoints here later: /media/analyze, /media/cloudinary upload,
-#  SSE streaming, etc., if needed.)
+
+@app.get("/stream/plan")
+def stream_plan(
+    prompt: str,
+    media: Optional[str] = None,
+    skip_media: int = 0,
+    media_urls: Optional[str] = None,
+):
+    """SSE stream for planning + optional rendering."""
+    media_files = [m for m in (media or "").split("|") if m]
+    media_urls_list = [u for u in (media_urls or "").split("|") if u]
+
+    def event_gen():
+        try:
+            original_analyser = agent.media_analyser
+
+            # If skip_media and no new URLs, we conceptually would use CachedOnlyAnalyser;
+            # for now, just keep original_analyser (remote-only flow mainly uses media_urls).
+            temp_files = []
+            filename_to_url = {}
+            try:
+                local_inputs = list(media_files)
+
+                # STEP 1: Media Analysis (remote URLs -> temp files)
+                if (media_files or media_urls_list) and not skip_media:
+                    yield _sse_format({"type": "step", "message": "Analyzing media…"})
+
+                if media_urls_list:
+                    for u in media_urls_list:
+                        _validate_cloud_url(u)
+                        r = requests.get(u, stream=True, timeout=240)
+                        if r.status_code != 200:
+                            continue
+                        suffix = Path(u).suffix or ".bin"
+                        tf = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+                        with tf as f:
+                            shutil.copyfileobj(r.raw, f)
+                        p = Path(tf.name)
+                        temp_files.append(p)
+                        local_inputs.append(str(p))
+                        filename_to_url[p.name] = u
+
+                # STEP 2: Prompt Enhancement
+                yield _sse_format({"type": "step", "message": "Enhancing prompt…"})
+
+                # STEP 3: Director Agent (Concept Creation)
+                yield _sse_format({"type": "step", "message": "Creating concept…"})
+
+                director_result = agent.director_stage(
+                    prompt,
+                    local_inputs,
+                    url_mappings=filename_to_url,
+                )
+                if not isinstance(director_result, dict) or director_result.get("status") == "error":
+                    msg = director_result.get("message") if isinstance(director_result, dict) else "Director stage failed"
+                    yield _sse_format({"type": "error", "message": msg or "Director stage failed"})
+                    return
+
+                # Emit director_complete with content
+                content_text = str(director_result.get("content") or "")
+                if content_text:
+                    yield _sse_format({"type": "director_complete", "content": content_text})
+
+                # 3b. Continue pipeline (Editor + Render)
+                yield _sse_format({"type": "step", "message": "Generating edit…"})
+
+                continue_result = agent.continue_after_director(
+                    content=content_text,
+                    abstract_plan=director_result.get("abstract_plan"),
+                    analyzed_data=director_result.get("analyses", {}),
+                    text_prompt=prompt,
+                    media_files=local_inputs,
+                    url_mappings=filename_to_url,
+                )
+                if not isinstance(continue_result, dict):
+                    yield _sse_format({"type": "error", "message": "Unexpected agent response"})
+                    return
+
+                # Map asset srcs to original URLs if present
+                try:
+                    jp = continue_result.get("json_plan")
+                    if isinstance(jp, dict) and filename_to_url:
+                        tl = jp.get("timeline", {})
+                        tracks = tl.get("tracks") or tl.get("clips")
+
+                        def map_clip(c):
+                            a = c.get("asset") if isinstance(c, dict) else None
+                            if isinstance(a, dict):
+                                src = a.get("src")
+                                if isinstance(src, str):
+                                    fname = Path(src).name
+                                    if fname in filename_to_url:
+                                        a["src"] = filename_to_url[fname]
+                                        c["asset"] = a
+
+                        if isinstance(tracks, list):
+                            for t in tracks:
+                                clips = t.get("clips", []) if isinstance(t, dict) else []
+                                for c in clips:
+                                    if isinstance(c, dict):
+                                        map_clip(c)
+                    continue_result["json_plan"] = jp
+                except Exception:
+                    pass
+
+                # Generate a plan_id
+                import time as _time, uuid as _uuid
+                now_ts = int(_time.time())
+                plan_id = continue_result.get("plan_id") or f"plan_{now_ts}_{_uuid.uuid4().hex[:8]}"
+
+                payload = dict(continue_result)
+                payload["plan_id"] = plan_id
+
+                # Send full result
+                yield _sse_format({"type": "result", "payload": payload})
+
+                # Render status handling (if any)
+                render_id = continue_result.get("render_id") or (continue_result.get("rendered_video") or {}).get("render_id")
+                immediate_url = continue_result.get("video_url") or (continue_result.get("rendered_video") or {}).get("video_url")
+
+                if immediate_url:
+                    yield _sse_format({"type": "done", "video_url": immediate_url})
+                    return
+
+                if render_id:
+                    tries = 0
+                    while tries < 180:  # up to ~9 minutes at 3s interval
+                        status = agent.check_render_status(render_id)
+                        yield _sse_format({
+                            "type": "render",
+                            "status": status.get("status"),
+                            "progress": status.get("progress"),
+                            "message": status.get("message"),
+                        })
+                        if status.get("video_url"):
+                            yield _sse_format({"type": "done", "video_url": status["video_url"]})
+                            return
+                        if str(status.get("status")) in {"error", "validation_error"}:
+                            yield _sse_format({"type": "error", "message": status.get("message", "Render failed")})
+                            return
+                        import time as _t
+                        _t.sleep(3)
+                        tries += 1
+
+                    yield _sse_format({"type": "error", "message": "Render timeout"})
+                    return
+
+                # No render info; end stream
+                yield _sse_format({"type": "done"})
+            finally:
+                # Cleanup temps
+                for p in temp_files:
+                    try:
+                        p.unlink(missing_ok=True)
+                    except Exception:
+                        pass
+        except Exception as e:
+            yield _sse_format({"type": "error", "message": str(e)})
+
+    return StreamingResponse(event_gen(), media_type="text/event-stream")
 
 # ============================================================================
 # STARTUP & SHUTDOWN
