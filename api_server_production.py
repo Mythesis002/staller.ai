@@ -250,6 +250,119 @@ async def cloudinary_sign() -> Dict[str, Any]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@app.post("/media/analyze_remote")
+async def analyze_remote(req: AnalyzeRemoteRequest, request: Request) -> Dict[str, Any]:
+    """Analyze a remote media URL by downloading to a temp file and invoking the analyzer.
+    Caches results by URL to avoid re-analysis.
+    """
+    logger.info(
+        "Analyze remote request",
+        extra={
+            "request_id": request.state.request_id,
+            "url": req.url,
+        },
+    )
+    try:
+        _validate_cloud_url(req.url)
+
+        # Dedup inflight by URL key
+        key = req.url
+        with _ANALYSIS_LOCK:
+            if key in ANALYSIS_INFLIGHT:
+                return {"status": "in_progress", "message": "Analysis already running"}
+            ANALYSIS_INFLIGHT.add(key)
+        try:
+            # Serve from cache if available
+            if key in ANALYSIS_CACHE:
+                res = dict(ANALYSIS_CACHE[key])
+                res.setdefault("status", res.get("status", "ok"))
+                res["cached"] = True
+                return {"status": "success", "analysis": res}
+
+            # Download to temp
+            r = requests.get(req.url, stream=True, timeout=240)
+            if r.status_code != 200:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Download failed: {r.status_code} "
+                           f"{r.text[:200] if hasattr(r, 'text') else ''}",
+                )
+            suffix = Path(req.filename or Path(req.url).name).suffix or ".bin"
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tf:
+                tmp_path = Path(tf.name)
+                shutil.copyfileobj(r.raw, tf)
+
+            # Route to proper analyzer based on extension
+            ext = tmp_path.suffix.lower()
+            if ext in ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.flv']:
+                res = agent.media_analyser.analyze_video(str(tmp_path))
+            elif ext in ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac']:
+                res = agent.media_analyser.analyze_audio(str(tmp_path))
+            elif ext in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']:
+                res = agent.media_analyser.analyze_image(str(tmp_path))
+            else:
+                res = {"status": "skipped", "message": f"Unsupported type {ext}"}
+
+            # Normalize and cache by URL
+            res_dict = (
+                res if isinstance(res, dict)
+                else getattr(res, '__dict__', {"status": "ok", "analysis": str(res)})
+            )
+            ANALYSIS_CACHE[key] = res_dict
+
+            # Persist to agent memory (optional but matches dev)
+            try:
+                from video_editing_agent import MediaAnalysis
+                import datetime
+
+                filename = req.filename or Path(req.url).name
+
+                media_analysis = MediaAnalysis(
+                    file_path=req.url,
+                    file_type=res_dict.get("file_type", "unknown"),
+                    filename=filename,
+                    analysis=res_dict.get("analysis", ""),
+                    metadata=res_dict.get("metadata", {}),
+                    timestamp=datetime.datetime.now().isoformat(),
+                    status=res_dict.get("status", "success"),
+                    cloud_url=req.url,
+                )
+
+                agent.memory.store_analysis(media_analysis)
+                logger.info(
+                    "Stored remote analysis",
+                    extra={
+                        "request_id": request.state.request_id,
+                        "filename": filename,
+                    },
+                )
+            except Exception as persist_err:
+                logger.warning(
+                    f"Failed to persist analysis: {persist_err}",
+                    extra={"request_id": request.state.request_id},
+                )
+
+            return {"status": "success", "analysis": res_dict}
+        finally:
+            with _ANALYSIS_LOCK:
+                ANALYSIS_INFLIGHT.discard(key)
+            # Cleanup temp file
+            try:
+                if 'tmp_path' in locals() and tmp_path.exists():
+                    tmp_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Analyze remote failed: {e}",
+            exc_info=True,
+            extra={"request_id": request.state.request_id},
+        )
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ============================================================================
 # PYDANTIC MODELS
 # ============================================================================
