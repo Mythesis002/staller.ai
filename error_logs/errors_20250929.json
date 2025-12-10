@@ -1,0 +1,27 @@
+[
+  {
+    "timestamp": "2025-09-29T13:16:31.277872",
+    "component": "JSON_EXTRACTION",
+    "error_type": "AttributeError",
+    "error_message": "'AdvancedJSONExtractor' object has no attribute '_auto_repair'",
+    "additional_data": {
+      "response_length": 271,
+      "response_preview": "\u8be5ip\u8bf7\u6c42\u8fc7\u591a\u5df2\u88ab\u6682\u65f6\u9650\u6d41 \u8fc7\u4e24\u5206\u949f\u518d\u8bd5\u8bd5\u5427(\u76ee\u524d\u9650\u5236\u4e86\u6bcf\u5c0f\u65f660\u6b21 \u6b63\u5e38\u4eba\u5b8c\u5168\u591f\u7528,\u5b66\u6821\u7f51\u7edc\u548c\u516c\u53f8\u7f51\u7edc\u7b49\u540c\u7f51\u7edc\u4e0b\u5171\u7528\u989d\u5ea6,\u5982\u679c\u9650\u5236\u4e86\u53ef\u4ee5\u5c1d\u8bd5\u5207\u6362\u7f51\u7edc\u4f7f\u7528 ),\u672c\u7f51\u7ad9\u6b63\u7248\u5730\u5740\u662f https://cha",
+      "context": {
+        "analyzed_data": {
+          "Cinematic_Video_Generation_Request.mp4": {
+            "file_type": "video",
+            "analysis": "Video analysis failed: GPU task aborted. Using fallback analysis.",
+            "metadata": {
+              "file_size_mb": 1.3928213119506836
+            },
+            "status": "fallback"
+          }
+        },
+        "prompt": "please mke kgf like edit",
+        "llm_response": "\u8be5ip\u8bf7\u6c42\u8fc7\u591a\u5df2\u88ab\u6682\u65f6\u9650\u6d41 \u8fc7\u4e24\u5206\u949f\u518d\u8bd5\u8bd5\u5427(\u76ee\u524d\u9650\u5236\u4e86\u6bcf\u5c0f\u65f660\u6b21 \u6b63\u5e38\u4eba\u5b8c\u5168\u591f\u7528,\u5b66\u6821\u7f51\u7edc\u548c\u516c\u53f8\u7f51\u7edc\u7b49\u540c\u7f51\u7edc\u4e0b\u5171\u7528\u989d\u5ea6,\u5982\u679c\u9650\u5236\u4e86\u53ef\u4ee5\u5c1d\u8bd5\u5207\u6362\u7f51\u7edc\u4f7f\u7528 ),\u672c\u7f51\u7ad9\u6b63\u7248\u5730\u5740\u662f https://chat19.aichatos.xyz \u5982\u679c\u4f60\u5728\u5176\u4ed6\u7f51\u7ad9\u9047\u5230\u6b64\u62a5\u9519\uff0c\u8bf7\u8bbf\u95eehttps://chat19.aichatos.xyz/ \uff0c\u5982\u679c\u4f60\u5df2\u7ecf\u5728\u672c\u7f51\u7ad9\uff0c\u8bf7\u5173\u95ed\u4ee3\u7406\uff0c\u4e0d\u8981\u4f7f\u7528\u516c\u5171\u7f51\u7edc\u8bbf\u95ee,\u5982\u9700\u5408\u4f5c\u63a5\u53e3\u8c03\u7528\u8bf7\u8054\u7cfb\u5fae\u4fe1kelemm220 \u6216\u8005\u524d\u5f80 https://cat.chatavx.com/  \u6ce8\u518c\u4f7f\u7528\uff08\u53ef\u4ed8\u8d39\u4f7f\u7528gpt4 \u6ce8\u518c\u53ef\u514d\u8d39\u4f7f\u75283.5\uff09"
+      }
+    },
+    "stack_trace": "Traceback (most recent call last):\n  File \"C:\\Users\\hp\\Downloads\\videoeditor_v1_crewai-project\\main_video_agent.py\", line 102, in process_request\n    content, json_plan = self.json_extractor.extract_and_separate(llm_response)\n                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^\n  File \"C:\\Users\\hp\\Downloads\\videoeditor_v1_crewai-project\\video_editing_agent.py\", line 1461, in extract_and_separate\n    return self._generate_fallback_response(llm_response)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^\n  File \"C:\\Users\\hp\\Downloads\\videoeditor_v1_crewai-project\\video_editing_agent.py\", line 1650, in _generate_fallback_response\n    return fallback_content, self._auto_repair(fallback_json_plan)\n                             ^^^^^^^^^^^^^^^^^\nAttributeError: 'AdvancedJSONExtractor' object has no attribute '_auto_repair'\n"
+  }
+]

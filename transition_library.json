@@ -1,0 +1,24 @@
+{
+  "transitions": [
+    {
+      "description": "a orange red themed transition in a circular comes from left and goes to right",
+      "url": "https://res.cloudinary.com/dwj7tznit/video/upload/v1762664269/blackbgroytranstion_kcalsd.mp4",
+      "duration": 1.0,
+      "chromaKey": {
+        "color": "#000000",
+        "threshold": 100,
+        "halo": 50
+      }
+    },
+    {
+      "description": "a blue clouud like pattern transitioncomes from right and goes to left",
+      "url": "https://res.cloudinary.com/dwj7tznit/video/upload/v1762667093/medium-vecteezy_blue-curved-cloud-transition-animation_11818536_medium_xjmztm.mp4",
+      "duration": 1.5,
+      "chromaKey": {
+        "color": "#ffffff",
+        "threshold": 100,
+        "halo": 50
+      }
+    }
+  ]
+}

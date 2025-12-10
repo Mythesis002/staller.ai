@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Video Editing Agent - Web</title>
+  <link rel="stylesheet" href="/static/css/style.css?v=5" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>STALLER AI</h1>
+    </header>
+
+    <section id="chat" class="chat"></section>
+
+    <!-- Gemini-like floating composer -->
+    <section class="composer">
+      <div class="composer-inner">
+        <div class="composer-row">
+          <button class="attach-btn" id="attachBtn" title="Add media" type="button">📎</button>
+          <input type="file" id="fileInput" multiple style="display:none;" accept="video/*,image/*,audio/*" />
+          <textarea id="prompt" rows="2" placeholder="Describe your edit…"></textarea>
+          <button id="sendBtn" class="send-btn" type="button">create video</button>
+        </div>
+        <div id="attachmentsTray" class="attachments-tray"></div>
+        <div id="planInfo" class="plan-info">Plan: <span id="planIdDisplay">none</span></div>
+        <!-- Hidden legacy elements preserved for JS compatibility -->
+        <button id="uploadBtn" style="display:none;">Upload</button>
+        <div id="uploadedList" style="display:none;"></div>
+      </div>
+    </section>
+
+    <section class="panels">
+      <div class="panel">
+        <h3>Content</h3>
+        <pre id="content"></pre>
+        <h4>Analyses</h4>
+        <pre id="analyses"></pre>
+      </div>
+      <div class="panel">
+        <h3>JSON Plan</h3>
+        <pre id="jsonPlan"></pre>
+      </div>
+      <div class="panel">
+        <h3>Rendered Video</h3>
+        <video id="videoPlayer" controls style="width:100%; max-height:360px; display:none;"></video>
+        <pre id="renderInfo"></pre>
+      </div>
+    </section>
+  </div>
+
+  <script src="/static/js/app.js?v=5"></script>
+</body>
+</html>

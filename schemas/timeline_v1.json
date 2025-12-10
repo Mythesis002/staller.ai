@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Shotstack Timeline v1",
+  "type": "object",
+  "required": ["timeline", "output"],
+  "properties": {
+    "timeline": {
+      "type": "object",
+      "properties": {
+        "tracks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "clips": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "asset": {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string" },
+                        "src": { "type": "string" },
+                        "text": { "type": "string" }
+                      },
+                      "additionalProperties": true
+                    },
+                    "start": { "type": ["number", "integer"] },
+                    "length": { "type": ["number", "integer"] }
+                  },
+                  "required": ["asset", "start", "length"],
+                  "additionalProperties": true
+                }
+              }
+            },
+            "required": ["clips"],
+            "additionalProperties": true
+          }
+        }
+      },
+      "required": ["tracks"],
+      "additionalProperties": true
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "format": { "type": "string" },
+        "resolution": { "type": "string" },
+        "aspectRatio": { "type": "string" },
+        "fps": { "type": ["number", "integer"] },
+        "audio": { "type": "object" }
+      },
+      "required": ["format"],
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

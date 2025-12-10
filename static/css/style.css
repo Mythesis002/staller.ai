@@ -1,0 +1,228 @@
+/* Processing/disabled states */
+.send-btn:disabled { opacity: .55; cursor: not-allowed; filter: grayscale(20%); }
+.attach-btn:disabled { opacity: .4; cursor: not-allowed; border-color: #2a3853; color: #6f84b5; }
+.composer textarea:disabled { opacity: .6; cursor: not-allowed; }
+.composer-inner.busy { filter: saturate(.95) brightness(.98); }
+/* Keep attachments visible while busy so users see progress overlays */
+.composer-inner.busy .attachments-tray { opacity: 1; pointer-events: none; height: auto; margin-top: 8px; padding: 0; overflow: visible; }
+.composer-inner.busy .remove { display: none; }
+
+/* Sender labels */
+.sender-label { font-size: 11px; color: #8ba1d2; margin: 2px 2px 4px; opacity: .9; }
+.chat-msg.user .sender-label { text-align: right; color: #9cc5ff; }
+.chat-msg.assistant .sender-label { text-align: left; }
+/* ============
+   Global Theme
+   ============ */
+* { box-sizing: border-box; }
+:root {
+  --bg: #0f1115;
+  --bg-elev: #161a21;
+  --panel: #141823;
+  --border: #262c36;
+  --text: #e6eaf2;
+  --muted: #a9b1c3;
+  --accent: #2d6cdf;
+  --accent-2: #7aa2f7;
+  --success: #1db954;
+  --danger: #f75555;
+  --shadow: 0 10px 24px rgba(0,0,0,0.35);
+}
+
+html, body { height: 100%; }
+body { margin: 0; background: radial-gradient(1200px 600px at 10% -10%, #10131a 0%, var(--bg) 60%); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; }
+
+/* Header (hidden for pure Gemini UI) */
+/* App Shell */
+#app { max-width: 100vw; width: 100vw; margin: 0; padding: 0 0 0; display: grid; grid-template-rows: auto 1fr; gap: 0; }
+
+/* Header title styling */
+header { display: block; }
+header h1 {
+  margin: 12px 0 0 24px; /* left margin requested */
+  font-weight: 800; /* strongest bold */
+  letter-spacing: 0.3px;
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+/* Chat Stream */
+.chat { height: calc(100vh - 240px); overflow-y: auto; padding: 24px 24px 220px; border: none; border-radius: 0; background: radial-gradient(1400px 700px at 10% -10%, #111521 0%, var(--bg) 60%); box-shadow: none; margin: 0; width: 100vw; max-width: 100vw; }
+.chat-msg { position: relative; padding: 14px 16px; border-radius: 18px; margin: 14px 12px; width: fit-content; max-width: 72%; line-height: 1.55; box-shadow: 0 2px 10px rgba(0,0,0,0.25); font-size: 14.5px; }
+.chat-msg.user { margin-left: auto; background: linear-gradient(180deg, #1c2540, #18243d); border: 1px solid #28334f; }
+.chat-msg.assistant { background: linear-gradient(180deg, #141a26, #121723); border: 1px solid #20283a; }
+.chat .msg .prompt { color: var(--text); margin-bottom: 8px; font-weight: 500; }
+.thinking .dot { width: 6px; height: 6px; background: #9fb2e9; border-radius: 50%; opacity: .2; animation: blink 1.2s infinite ease-in-out; }
+.thinking .dot:nth-child(2) { animation-delay: .2s; }
+.thinking .dot:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .2 } 40% { opacity: 1 } }
+
+/* Avatars (pseudo elements) */
+.chat-msg.assistant { padding-left: 52px; }
+.chat-msg.assistant::before { content: "S"; position: absolute; left: -4px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; background: #101523; border: 1px solid #2a344a; color: #9fb2e9; display: grid; place-items: center; font-weight: 700; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+.chat-msg.user { padding-right: 12px; }
+.chat-msg.user::before { content: ""; }
+
+/* Composer (Gemini-like) */
+.composer { position: fixed; left: 0; right: 0; bottom: 18px; display: flex; justify-content: center; pointer-events: none; z-index: 1000; }
+.composer-inner { width: min(1100px, calc(100% - 48px)); background: #0f1218; border: 1px solid #283245; border-radius: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.35); padding: 10px; pointer-events: auto; backdrop-filter: blur(6px); }
+.composer-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
+.attach-btn { width: 44px; height: 44px; border-radius: 12px; border: 1px dashed #3a4763; background: #111726; color: #9fb2e9; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .08s ease, background .2s ease; }
+.attach-btn:hover { background: #121a2b; }
+.attach-btn:active { transform: scale(0.98); }
+.send-btn { height: 44px; padding: 0 18px; border-radius: 12px; background: linear-gradient(180deg, #1e335f, #1a2b4e); border: 1px solid #2b3b5e; color: #dfe8ff; font-weight: 600; letter-spacing: .2px; transition: transform .08s ease, filter .2s ease; }
+.send-btn:hover { filter: brightness(1.06); }
+.send-btn:active { transform: translateY(1px); }
+.composer textarea { width: 100%; min-height: 44px; max-height: 180px; resize: vertical; background: #0a0e15; color: var(--text); border: 1px solid #252e41; border-radius: 12px; padding: 10px 12px; }
+.attachments-tray { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.attachments-tray .att { position: relative; padding: 6px; background: #0e1219; border: 1px solid #273044; border-radius: 10px; overflow: hidden; }
+.attachments-tray .att img { max-width: 120px; max-height: 90px; border-radius: 8px; display: block; }
+.attachments-tray .att video { max-width: 140px; max-height: 100px; border-radius: 8px; display: block; }
+.attachments-tray .remove { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid #444; border-radius: 8px; padding: 2px 6px; cursor: pointer; font-size: 12px; }
+.plan-info { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+#uploadedList { font-size: 12px; color: var(--muted); background: #0f1218; border: 1px dashed #2b3343; padding: 8px; border-radius: 8px; max-height: 120px; overflow: auto; }
+
+/* Attachment progress overlay (small, professional) */
+.attachments-tray .att .overlay { position: absolute; inset: 6px; border-radius: 8px; background: rgba(8,12,18,0.55); border: 1px solid rgba(60,80,115,0.4); display: grid; place-items: center; pointer-events: none; z-index: 2; }
+.attachments-tray .att .ov-inner { display: grid; gap: 6px; justify-items: center; font-size: 12px; color: #cfe0ff; }
+.attachments-tray .att .spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid #7fa1ff; border-top-color: transparent; animation: spin .9s linear infinite; }
+.attachments-tray .att .bars { display: grid; gap: 4px; width: 100px; }
+.attachments-tray .att .bar { height: 6px; border-radius: 4px; background: #141b28; border: 1px solid #2a3650; overflow: hidden; }
+.attachments-tray .att .bar > span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #3c78ff, #2b56cc); transition: width .15s ease; }
+.attachments-tray .att .chip { position: absolute; left: 6px; bottom: 6px; font-size: 11px; color: #cbd9ff; background: rgba(16,22,32,0.7); border: 1px solid #2a3650; border-radius: 6px; padding: 2px 6px; }
+
+/* Upload/Analyze/Cloud progress bubble */
+.upload-status { padding: 8px 10px; background: #0f1420; border: 1px solid #263147; border-radius: 12px; }
+.upload-status .title { font-weight: 600; color: #cfe0ff; margin-bottom: 6px; font-size: 13px; }
+.upload-status .rows { display: grid; gap: 6px; }
+.upload-status .row { display: grid; grid-template-columns: 18px 1fr auto; align-items: center; gap: 8px; font-size: 13px; }
+.upload-status .name { color: #d7def0; word-break: break-all; }
+.upload-status .state { font-size: 12px; color: #9bb0dd; }
+.upload-status .icon { width: 14px; height: 14px; border-radius: 50%; display: inline-block; position: relative; }
+.upload-status .icon.spin::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid #7fa1ff; border-top-color: transparent; animation: spin 0.8s linear infinite; }
+.upload-status .icon.ok { background: linear-gradient(180deg, #1b3a1e, #133015); border: 1px solid #2a6f3a; }
+.upload-status .icon.err { background: linear-gradient(180deg, #3a1b1b, #2b1212); border: 1px solid #6f2a2a; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+button { background: var(--accent); color: white; border: 1px solid #1f4fb1; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 600; letter-spacing: 0.2px; box-shadow: 0 6px 16px rgba(45,108,223,0.25); transition: transform .06s ease, filter .15s ease; }
+button:hover { filter: brightness(1.06); }
+button:active { transform: translateY(1px); }
+
+input, textarea { background: #0f131a; color: var(--text); border: 1px solid #2c3444; border-radius: 10px; padding: 10px 12px; outline: none; }
+input:focus, textarea:focus { border-color: #3a5fce; box-shadow: 0 0 0 2px rgba(58,95,206,0.25); }
+
+/* Panels hidden for pure Gemini UI */
+.panels { display: none; }
+.panel { display: none; }
+pre { display: none; }
+
+/* Attachments (chat previews) */
+.atts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.att { background: #0e1219; border: 1px solid #273044; border-radius: 10px; padding: 6px; }
+.att img { max-width: 180px; max-height: 120px; display: block; border-radius: 8px; }
+.att video { max-width: 200px; max-height: 140px; display: block; border-radius: 8px; background: #000; }
+
+/* Final video inside chat bubble */
+.chat-video video { width: min(720px, 100%); max-height: 420px; border-radius: 12px; background: #000; box-shadow: 0 10px 24px rgba(0,0,0,.35); margin-top: 8px; }
+
+/* 16:9 placeholder while generating/rendering */
+.chat-video .video-placeholder {
+  position: relative;
+  width: min(720px, 100%);
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  margin-top: 8px;
+  background:
+    radial-gradient(100% 100% at 20% 0%, rgba(55,70,110,0.25), rgba(20,24,35,0.6)),
+    linear-gradient(180deg, #0e1422, #0a0f18);
+  border: 1px solid #263147;
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.chat-video .video-placeholder::after{
+  /* subtle animated sheen */
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.06) 30%, transparent 40%);
+  transform: translateX(-100%);
+  animation: sheen 2.2s ease-in-out infinite;
+}
+@keyframes sheen { 50% { transform: translateX(0%); } 100% { transform: translateX(100%); } }
+.chat-video .video-placeholder .label{
+  position: absolute; bottom: 12px; left: 12px; right: 12px;
+  text-align: left; font-size: 13px; color: #cfe0ff; opacity: .9;
+  text-shadow: 0 1px 2px rgba(0,0,0,.6);
+}
+
+/* Global spinner (in addition to scoped ones) */
+.spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #7fa1ff; border-top-color: transparent; animation: spin .9s linear infinite; }
+.spinner.large { width: 44px; height: 44px; border-width: 4px; }
+
+/* Render panel */
+#videoPlayer { border-radius: 10px; background: #000; box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
+#renderInfo { font-size: 12px; color: var(--muted); }
+
+/* Plan info indicator */
+#planInfo { color: var(--muted); }
+
+/* JSON toggle button */
+.toggleJson { background: #2b395f; border-color: #243259; box-shadow: 0 6px 16px rgba(43,57,95,0.25); margin-top: 8px; }
+.toggleJson:hover { filter: brightness(1.08); }
+
+/* Scrollbars (WebKit) */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: #2a3242; border-radius: 10px; border: 2px solid #12161f; }
+*::-webkit-scrollbar-track { background: #0d1117; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .panels { grid-template-columns: 1fr; }
+  .chat { height: calc(100vh - 280px); margin: 0; padding: 16px 14px 240px; width: 100vw; max-width: 100vw; }
+  .chat-msg { max-width: 92%; border-radius: 16px; }
+  .composer-inner { width: calc(100% - 32px); }
+}
+
+/* Subtle hide or deemphasize plan info line */
+#planInfo { display: none; }
+
+/* Director content with typing effect */
+.director-content {
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 12px;
+  font-size: 14.5px;
+}
+
+/* Edit progress box (Gemini Veo style) */
+.edit-progress-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #141a26, #0f1420);
+  border: 1px solid #263147;
+  border-radius: 12px;
+  margin-top: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.edit-progress-box .progress-icon {
+  font-size: 24px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.edit-progress-box .progress-text {
+  color: #cfe0ff;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}

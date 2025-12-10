@@ -1,0 +1,92 @@
+# ============================================================================
+# PRODUCTION REQUIREMENTS
+# Install with: pip install -r requirements-production.txt
+# ============================================================================
+
+# Core dependencies (from base requirements.txt)
+gradio_client>=0.8.0
+requests>=2.28.0
+Pillow>=9.0.0
+jsonschema>=4.0.0
+python-dotenv>=0.19.0
+opencv-python>=4.5.0
+urllib3>=1.26.0
+
+# API Framework
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+Jinja2>=3.1.0
+
+# Google Gemini API
+google-genai>=0.2.0
+
+# ============================================================================
+# PRODUCTION-SPECIFIC DEPENDENCIES
+# ============================================================================
+
+# Rate Limiting
+slowapi>=0.1.9
+redis>=5.0.0  # For distributed rate limiting
+
+# Logging & Monitoring
+sentry-sdk[fastapi]>=1.40.0  # Error tracking
+python-json-logger>=2.0.7  # Structured logging
+
+# Security
+python-jose[cryptography]>=3.3.0  # JWT authentication
+passlib[bcrypt]>=1.7.4  # Password hashing
+python-multipart>=0.0.6  # File upload security
+
+# Database (choose one)
+# PostgreSQL (recommended for production)
+psycopg2-binary>=2.9.9
+sqlalchemy>=2.0.0
+alembic>=1.13.0  # Database migrations
+
+# OR SQLite (for smaller deployments)
+# aiosqlite>=0.19.0
+
+# Caching
+redis>=5.0.0
+hiredis>=2.3.0  # Faster Redis protocol
+
+# Background Jobs
+celery>=5.3.0
+flower>=2.0.0  # Celery monitoring UI
+
+# Performance
+orjson>=3.9.0  # Faster JSON serialization
+httpx>=0.26.0  # Async HTTP client
+aiofiles>=23.2.0  # Async file operations
+
+# Metrics & Analytics
+prometheus-client>=0.19.0
+prometheus-fastapi-instrumentator>=6.1.0
+
+# File Storage (Cloud)
+cloudinary>=1.36.0  # Already in use
+boto3>=1.34.0  # AWS S3 (optional alternative)
+
+# Testing (development/CI)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+httpx>=0.26.0  # For testing async endpoints
+
+# Code Quality
+black>=23.12.0  # Code formatting
+flake8>=7.0.0  # Linting
+mypy>=1.8.0  # Type checking
+isort>=5.13.0  # Import sorting
+
+# Documentation
+mkdocs>=1.5.0
+mkdocs-material>=9.5.0
+
+# Deployment
+gunicorn>=21.2.0  # Production WSGI server
+supervisor>=4.2.5  # Process management
+
+# Environment Management
+python-decouple>=3.8  # Better than python-dotenv for production
