@@ -213,7 +213,7 @@ app.include_router(health_router)
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """Serve the web UI"""
-    logger.info("Serving index page", extra={"request_id": request.state.request_id})
+    logger.info("Serving index page")
     return templates.TemplateResponse("index.html", {"request": request})
 
 
