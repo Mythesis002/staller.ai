@@ -221,6 +221,34 @@ async def index(request: Request):
 async def favicon():
     return HTMLResponse(content="", status_code=204)
 
+@app.get("/media/cloudinary/sign")
+async def cloudinary_sign() -> Dict[str, Any]:
+    """Provide a short-lived signature for direct client uploads to Cloudinary.
+    Returns api_key, cloud_name, timestamp, folder, and signature.
+    """
+    try:
+        cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME")
+        api_key = os.getenv("CLOUDINARY_API_KEY")
+        api_secret = os.getenv("CLOUDINARY_API_SECRET")
+        folder = os.getenv("CLOUDINARY_FOLDER", "videoagent/uploads")
+        if not (cloud_name and api_key and api_secret):
+            raise HTTPException(status_code=400, detail="Missing Cloudinary credentials in env")
+        import time as _t, hashlib
+        timestamp = int(_t.time())
+        params = {'timestamp': str(timestamp), 'folder': folder}
+        to_sign = '&'.join([f"{k}={v}" for k, v in sorted(params.items())]) + api_secret
+        signature = hashlib.sha1(to_sign.encode('utf-8')).hexdigest()
+        return {
+            'cloud_name': cloud_name,
+            'api_key': api_key,
+            'timestamp': timestamp,
+            'folder': folder,
+            'signature': signature,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================================================
 # PYDANTIC MODELS
