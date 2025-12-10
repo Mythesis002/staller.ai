@@ -371,6 +371,31 @@ class PlanRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=2000, description="User instruction")
     media_files: Optional[List[str]] = Field(default_factory=list, description="Local file paths")
     media_urls: Optional[List[str]] = Field(default_factory=list, description="Cloud URLs")
+    class PlanRequest(BaseModel):
+    prompt: str = Field(..., description="User instruction for the video plan")
+    media_files: Optional[List[str]] = Field(default_factory=list, description="Absolute paths to local media files")
+    media_urls: Optional[List[str]] = Field(default_factory=list, description="Cloud URLs corresponding to media files (same order)")
+
+
+@app.post("/plan")
+def create_plan(req: PlanRequest) -> Dict[str, Any]:
+    """Create a new editing plan by invoking the VideoEditingAgent."""
+    try:
+        # Build url_mappings if media_urls provided
+        url_mappings = {}
+        if req.media_files and req.media_urls and len(req.media_files) == len(req.media_urls):
+            for file_path, cloud_url in zip(req.media_files, req.media_urls):
+                if cloud_url:
+                    filename = Path(file_path).name
+                    url_mappings[filename] = cloud_url
+                    print(f"🔗 API: Mapping {filename} → {cloud_url[:60]}...")
+        
+        result = agent.process_request(req.prompt, req.media_files or [], url_mappings=url_mappings if url_mappings else None)
+        if not isinstance(result, dict):
+            raise HTTPException(status_code=500, detail="Unexpected agent response")
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 class AnalyzeRequest(BaseModel):
