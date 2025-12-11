@@ -62,12 +62,7 @@ app = FastAPI(
 # MIDDLEWARE (Order matters!)
 # ============================================================================
 
-# 1. Trusted Host (Security)
-if os.getenv("ALLOWED_HOSTS"):
-    app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=os.getenv("ALLOWED_HOSTS", "").split(",")
-    )
+
 
 # 2. CORS
 cors_config = get_cors_config()
